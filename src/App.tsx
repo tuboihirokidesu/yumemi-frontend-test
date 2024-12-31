@@ -1,5 +1,6 @@
 import { use, Suspense } from 'react';
 import { fetchApi } from './api';
+import { Checkbox } from './_components/checkbox';
 
 type ApiResponse = {
   message: string;
@@ -15,13 +16,13 @@ function Prefectures({ dataPromise }: { dataPromise: Promise<ApiResponse> }) {
   return (
     <div className='p-4'>
       <p className='text-lg font-bold'>{data.message}</p>
-      <ul className='list-disc pl-5'>
+      <div className='grid grid-cols-3 gap-2'>
         {data.result.map((prefecture) => (
-          <li key={prefecture.prefCode} className='text-base'>
+          <Checkbox key={prefecture.prefCode}>
             {prefecture.prefCode}: {prefecture.prefName}
-          </li>
+          </Checkbox>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
