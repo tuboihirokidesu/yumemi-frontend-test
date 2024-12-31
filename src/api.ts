@@ -1,9 +1,21 @@
+import { cache } from 'react';
+
 export const apiEndpoint =
   'https://yumemi-frontend-engineer-codecheck-api.vercel.app';
 
-export const fetchApi = async (path: string) => {
+type Props = {
+  path: 'api/v1/prefectures' | 'api/v1/population/composition/perYear';
+  prefCode?: string;
+};
+
+export const fetchApi = cache(async ({ path, prefCode }: Props) => {
   try {
-    const response = await fetch(`${apiEndpoint}/${path}`, {
+    const url =
+      path === 'api/v1/population/composition/perYear' && prefCode
+        ? `${apiEndpoint}/${path}?prefCode=${prefCode}`
+        : `${apiEndpoint}/${path}`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'X-API-KEY': '8FzX5qLmN3wRtKjH7vCyP9bGdEaU4sYpT6cMfZnJ',
@@ -20,4 +32,4 @@ export const fetchApi = async (path: string) => {
     console.error('Fetch API error:', error);
     throw error;
   }
-};
+});
