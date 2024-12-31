@@ -6,7 +6,7 @@ import {
 import { cn } from '../lib/utils';
 
 const variants = cva(
-  'group flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed',
+  'group flex w-fit items-center gap-2 cursor-pointer disabled:cursor-not-allowed',
   {
     variants: {
       size: {
