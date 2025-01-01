@@ -1,4 +1,4 @@
-import { use, Suspense, useMemo } from 'react';
+import { use, Suspense, useMemo, useState, useEffect } from 'react';
 import { fetchApi } from './api';
 import { useQueryState } from 'nuqs';
 import { PREFECTURE_CODE } from './constants/param-keys';
@@ -31,7 +31,10 @@ export function PopulationGraphPromise() {
 
   return (
     <Suspense fallback={<p className='text-center'>Loading...</p>}>
-      <PopulationGraph dataPromise={populationDataPromise} />
+      <PopulationGraph
+        dataPromise={populationDataPromise}
+        prefectureCodes={prefectureCodes}
+      />
     </Suspense>
   );
 }
@@ -53,14 +56,38 @@ type ApiResponse = {
 
 type Props = {
   dataPromise: Promise<ApiResponse[]>;
+  prefectureCodes: string[];
 };
 
-function PopulationGraph({ dataPromise }: Props) {
+async function getPrefectureNames(prefectureCodes: string[]) {
+  const response = await fetchApi({ path: 'api/v1/prefectures' });
+  const prefectureMap = response.result.reduce(
+    (
+      acc: Record<number, string>,
+      pref: { prefCode: number; prefName: string }
+    ) => {
+      acc[pref.prefCode] = pref.prefName;
+      return acc;
+    },
+    {}
+  );
+  return prefectureCodes.map((code) => prefectureMap[parseInt(code)]);
+}
+
+function PopulationGraph({ dataPromise, prefectureCodes }: Props) {
   const data = use(dataPromise);
+  const [prefectureNames, setPrefectureNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    getPrefectureNames(prefectureCodes).then(setPrefectureNames);
+  }, [prefectureCodes]);
+
+  const allYears = extractAllYears(data);
+  const mergedData = createMergedData(allYears, data);
 
   return (
     <ResponsiveContainer height={400} width='80%'>
-      <LineChart>
+      <LineChart data={mergedData}>
         <CartesianGrid strokeDasharray='3 3' />
         <XAxis
           dataKey='year'
@@ -77,7 +104,7 @@ function PopulationGraph({ dataPromise }: Props) {
             value: '人口',
             style: { fontSize: '12px' },
             position: 'insideTopLeft',
-            offset: 10,
+            offset: 8,
           }}
           orientation='left'
           tickFormatter={(value) => `${value / 10000}万人`}
@@ -85,17 +112,43 @@ function PopulationGraph({ dataPromise }: Props) {
         />
         <Tooltip />
         <Legend />
-        {data.map((prefectureData, index) => (
+        {data.map((_, index) => (
           <Line
             key={index}
             type='monotone'
-            dataKey='value'
-            data={prefectureData.result.data[index].data}
-            name={prefectureData.result.data[index].label}
-            stroke='#8884d8'
+            dataKey={`value${index}`}
+            name={prefectureNames[index]}
+            stroke={`hsl(${(index * 137) % 360}, 70%, 50%)`}
           />
         ))}
       </LineChart>
     </ResponsiveContainer>
   );
+}
+
+function extractAllYears(data: ApiResponse[]): Set<number> {
+  const allYears = new Set<number>();
+  data.forEach((prefData) => {
+    prefData.result.data[0].data.forEach((yearData) => {
+      allYears.add(yearData.year);
+    });
+  });
+  return allYears;
+}
+
+function createMergedData(allYears: Set<number>, data: ApiResponse[]) {
+  return Array.from(allYears)
+    .sort((a, b) => a - b)
+    .map((year) => {
+      const yearEntry: { [key: string]: number | undefined } = { year };
+
+      data.forEach((prefData, index) => {
+        const prefValue = prefData.result.data[0].data.find(
+          (d) => d.year === year
+        )?.value;
+        yearEntry[`value${index}`] = prefValue;
+      });
+
+      return yearEntry;
+    });
 }
