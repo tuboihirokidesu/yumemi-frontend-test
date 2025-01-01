@@ -51,19 +51,38 @@ type ApiResponse = {
   };
 };
 
-function PopulationGraph({
-  dataPromise,
-}: {
+type Props = {
   dataPromise: Promise<ApiResponse[]>;
-}) {
+};
+
+function PopulationGraph({ dataPromise }: Props) {
   const data = use(dataPromise);
 
   return (
-    <ResponsiveContainer height={400}>
+    <ResponsiveContainer height={400} width='80%'>
       <LineChart>
         <CartesianGrid strokeDasharray='3 3' />
-        <XAxis dataKey='year' />
-        <YAxis />
+        <XAxis
+          dataKey='year'
+          label={{
+            value: '年度',
+            style: { fontSize: '12px' },
+            position: 'insideBottomRight',
+            offset: -4,
+          }}
+          tick={{ fontSize: 10 }}
+        />
+        <YAxis
+          label={{
+            value: '人口',
+            style: { fontSize: '12px' },
+            position: 'insideTopLeft',
+            offset: 10,
+          }}
+          orientation='left'
+          tickFormatter={(value) => `${value / 10000}万人`}
+          tick={{ fontSize: 10 }}
+        />
         <Tooltip />
         <Legend />
         {data.map((prefectureData, index) => (
@@ -71,7 +90,7 @@ function PopulationGraph({
             key={index}
             type='monotone'
             dataKey='value'
-            data={prefectureData.result.data}
+            data={prefectureData.result.data[index].data}
             name={prefectureData.result.data[index].label}
             stroke='#8884d8'
           />
