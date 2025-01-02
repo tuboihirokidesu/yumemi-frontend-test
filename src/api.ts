@@ -30,6 +30,7 @@ export const fetchApi = cache(async ({ path, prefCode }: Props) => {
     return await response.json()
   } catch (error) {
     console.error("Fetch API error:", error)
+
     return { result: [] }
   }
 })

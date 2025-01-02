@@ -67,10 +67,12 @@ async function getPrefectureNames(prefectureCodes: string[]) {
       pref: { prefCode: number; prefName: string },
     ) => {
       acc[pref.prefCode] = pref.prefName
+
       return acc
     },
     {},
   )
+
   return prefectureCodes.map((code) => prefectureMap[parseInt(code)])
 }
 
@@ -133,6 +135,7 @@ function extractAllYears(data: ApiResponse[]): Set<number> {
       allYears.add(yearData.year)
     })
   })
+
   return allYears
 }
 
