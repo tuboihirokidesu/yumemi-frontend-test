@@ -1,2 +1,2 @@
 /** 都道府県コード */
-export const PREFECTURE_CODE = 'prefectureCode';
+export const PREFECTURE_CODE = "prefectureCode"
